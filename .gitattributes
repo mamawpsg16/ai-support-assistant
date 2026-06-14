@@ -1,0 +1,9 @@
+# Normalize line endings so the repo behaves the same on Windows, WSL, and Linux.
+* text=auto
+
+# Shell scripts MUST be LF — CRLF breaks `sh` inside Linux/Docker containers.
+*.sh text eol=lf
+
+# Dockerfiles and entrypoints: keep LF.
+Dockerfile text eol=lf
+docker-entrypoint.sh text eol=lf

@@ -1,0 +1,57 @@
+# docker-compose.yml — run the whole app with one command:  docker compose up --build
+#
+# Starts two containers:
+#   backend  -> FastAPI API on http://localhost:8000  (auto-seeds the DB on first run)
+#   frontend -> Vue dev server on http://localhost:5173
+# Both mount your source for HOT RELOAD (edit a file -> it reloads).
+#
+# Prerequisite: copy .env.example to .env and add your Stripe test keys.
+# Stripe webhooks: run `stripe listen --forward-to http://localhost:8000/webhooks/stripe`
+# on the host as usual (Docker doesn't change that).
+
+# Ports are configurable to avoid clashes on your machine. Override either by editing
+# .env (BACKEND_PORT / FRONTEND_PORT) or inline, e.g.:
+#     FRONTEND_PORT=5174 BACKEND_PORT=8001 docker compose up
+# The API URL, CORS, and Stripe redirect URLs all derive from these automatically.
+
+services:
+  backend:
+    build:
+      context: .                      # repo root, so the Dockerfile can copy backend/
+      dockerfile: backend/Dockerfile
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"  # host:container — only the host side changes
+    env_file:
+      - .env                          # Stripe keys, etc. (must exist — copy .env.example)
+    environment:
+      # DB lives on the named volume so data survives restarts.
+      - DATABASE_URL=sqlite:////data/support.db
+      # Force uvicorn's file watcher to poll (reliable reload on Docker/Windows mounts).
+      - WATCHFILES_FORCE_POLLING=true
+      # Allow the frontend's (possibly remapped) origin to call the API.
+      - CORS_ORIGINS=http://localhost:${FRONTEND_PORT:-5173},http://127.0.0.1:${FRONTEND_PORT:-5173}
+      # Stripe redirects back to the frontend on its host port.
+      - CHECKOUT_SUCCESS_URL=http://localhost:${FRONTEND_PORT:-5173}/checkout/success
+      - CHECKOUT_CANCEL_URL=http://localhost:${FRONTEND_PORT:-5173}/checkout/cancel
+    volumes:
+      - ./backend:/app/backend        # live source -> hot reload
+      - dbdata:/data                  # persistent SQLite DB
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    environment:
+      # Browser (on host) calls the API on its published host port.
+      - VITE_API_BASE=http://localhost:${BACKEND_PORT:-8000}
+      - CHOKIDAR_USEPOLLING=true              # reliable hot reload across bind mounts
+    volumes:
+      - ./frontend:/app               # live source -> hot reload
+      - /app/node_modules             # keep the container's node_modules (don't mask it)
+    depends_on:
+      - backend
+
+volumes:
+  dbdata:                             # named volume holding support.db

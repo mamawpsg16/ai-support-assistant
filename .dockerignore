@@ -1,0 +1,20 @@
+# Keep the backend build context (repo root) small and clean.
+.git
+.gitignore
+.claude
+.venv
+venv
+**/__pycache__
+*.py[cod]
+*.db
+.env
+.env.*
+!.env.example
+
+# Frontend has its own build (context ./frontend); exclude it from the backend context.
+frontend
+node_modules
+dist
+
+# Docs/plans not needed in the image
+*.md

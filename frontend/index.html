@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Storefront</title>
+  </head>
+  <body>
+    <!--
+      This is the ONLY html page in a Single Page Application (SPA).
+      The empty <div id="app"> below is where Vue "mounts" — Vue takes over this
+      div and renders all pages inside it with JavaScript. The user never loads a
+      second html file; vue-router swaps the content as you navigate.
+    -->
+    <div id="app"></div>
+
+    <!-- type="module" lets the browser use import/export. Vite serves this file. -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

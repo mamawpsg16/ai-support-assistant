@@ -1,0 +1,9 @@
+# Phase 1 dependencies only.
+# Later phases add their own (Stripe in P2, Anthropic/Groq in P4, Chroma in P3).
+fastapi>=0.115,<0.120
+uvicorn[standard]>=0.30,<0.40
+sqlalchemy>=2.0,<2.1
+pydantic>=2.7,<3.0
+email-validator>=2.0,<3.0   # required by Pydantic's EmailStr (validates email fields)
+python-dotenv>=1.0,<2.0
+stripe>=11.0,<13.0          # Phase 2: Stripe SDK (payments, refunds, webhooks)

@@ -1,0 +1,8 @@
+# Node dependencies (huge; reinstalled with `npm install`)
+node_modules/
+
+# Vite build output
+dist/
+
+# Local env overrides
+.env.local
