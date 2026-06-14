@@ -26,6 +26,8 @@ services:
     environment:
       # DB lives on the named volume so data survives restarts.
       - DATABASE_URL=sqlite:////data/support.db
+      # Phase 3: Chroma vector store also on the volume (built once, survives restarts).
+      - CHROMA_DIR=/data/chroma_db
       # Force uvicorn's file watcher to poll (reliable reload on Docker/Windows mounts).
       - WATCHFILES_FORCE_POLLING=true
       # Allow the frontend's (possibly remapped) origin to call the API.

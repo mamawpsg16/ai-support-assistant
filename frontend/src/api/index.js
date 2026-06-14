@@ -43,3 +43,10 @@ export const payments = {
   checkout: (orderId) => http.post(`/payments/checkout/${orderId}`).then((r) => r.data),
   refund: (orderId) => http.post(`/payments/refund/${orderId}`).then((r) => r.data),
 }
+
+// Phase 4: AI chat. Send the whole conversation (backend is stateless) + optional
+// customer id; get back { reply }.
+export const chat = {
+  send: (messages, customerId) =>
+    http.post('/chat', { messages, customer_id: customerId }).then((r) => r.data),
+}

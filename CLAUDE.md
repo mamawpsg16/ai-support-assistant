@@ -40,7 +40,12 @@ localhost:5173). Run the backend with `uvicorn backend.main:app --reload`.
   5 SPA exercising all APIs (store/checkout, orders+refund, subscriptions, manage CRUD).
 - **Security pass (DEFERRED — next):** NO auth yet; every endpoint is open. See
   `SECURITY.md`. Add login + route guards + ownership checks before any real deploy.
-- **Phase 3 — RAG (pending):** FAQ/policy markdown embedded in Chroma + retrieval.
+- **Phase 3 — RAG (DONE):** FAQ/policy markdown in `backend/knowledge/` → `services/rag.py`
+  (load, chunk by `##` heading, embed, store) → Chroma persisted to a volume → `GET /search`
+  route. Embeddings = Chroma's local default (all-MiniLM-L6-v2). Verified in Docker.
+  **DOCKER-ONLY:** onnxruntime + torch wheels both fail to init on the host
+  (Windows/Anaconda — DLL init / segfault), so RAG runs in the Linux container only.
+  Build index with `python -m backend.index_kb`; entrypoint auto-builds on first boot.
 - **Phase 4 — AI chat (pending):** chat endpoint with tool calling (get_order_status,
   get_customer_subscription, process_refund, search_faq). Provider not locked —
   Anthropic Claude vs Groq (free). Both keys live in `.env`. Wire chat widget into SPA.
@@ -66,7 +71,9 @@ backend/
   models/        # SQLAlchemy ORM models = DB tables
   schemas/       # Pydantic models = API request/response contracts
   routes/        # one router per resource (+ support.py, payments.py, webhooks.py)
-  services/      # business logic (crud.py, stripe_service.py; rag.py later)
+  services/      # business logic (crud.py, stripe_service.py, rag.py)
+  knowledge/     # Phase 3: markdown knowledge base (RAG source docs)
+  index_kb.py    # Phase 3: build the Chroma vector store from knowledge/*.md
 ```
 Each later phase ADDS files (e.g. `services/rag.py`, `routes/chat.py`).
 

@@ -7,3 +7,5 @@ pydantic>=2.7,<3.0
 email-validator>=2.0,<3.0   # required by Pydantic's EmailStr (validates email fields)
 python-dotenv>=1.0,<2.0
 stripe>=11.0,<13.0          # Phase 2: Stripe SDK (payments, refunds, webhooks)
+chromadb>=0.5,<2.0          # Phase 3: vector DB + built-in local embeddings (all-MiniLM-L6-v2, runs in Docker/Linux)
+groq>=0.11,<1.0             # Phase 4: Groq SDK (OpenAI-compatible chat + tool calling)

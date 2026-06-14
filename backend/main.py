@@ -19,7 +19,7 @@ from backend.database import Base, engine
 # classes. Defining those classes is what registers their tables on Base.metadata —
 # so this import must happen BEFORE create_all() below, or no tables get built.
 from backend import models  # noqa: F401  (imported for its side effect of registering models)
-from backend.routes import customers, orders, payments, products, subscriptions, support, webhooks
+from backend.routes import chat, customers, orders, payments, products, search, subscriptions, support, webhooks
 
 # Create the database tables if they don't already exist (safe to run every startup).
 # Fine for a learning project; real apps use migrations (e.g. Alembic) instead.
@@ -58,6 +58,8 @@ app.include_router(subscriptions.router)
 app.include_router(support.router)
 app.include_router(payments.router)    # Phase 2: Stripe checkout + refund
 app.include_router(webhooks.router)    # Phase 2: Stripe webhook receiver
+app.include_router(search.router)      # Phase 3: RAG knowledge-base search
+app.include_router(chat.router)        # Phase 4: AI chat assistant (Groq + tools)
 
 
 # GET /health -> a tiny endpoint to confirm the API is up.

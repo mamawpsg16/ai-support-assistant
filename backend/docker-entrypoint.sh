@@ -9,12 +9,22 @@
 set -e
 
 DB_FILE="/data/support.db"
+CHROMA_DIR="${CHROMA_DIR:-/data/chroma_db}"
 
 if [ ! -f "$DB_FILE" ]; then
   echo "No database found at $DB_FILE — seeding sample data..."
   python -m backend.seed
 else
   echo "Database found at $DB_FILE — skipping seed."
+fi
+
+# Phase 3 (RAG): build the vector store from backend/knowledge/*.md on first run.
+# Downloads the ~80MB embedding model the first time, then caches it in the image layer.
+if [ ! -d "$CHROMA_DIR" ]; then
+  echo "No vector store at $CHROMA_DIR — building RAG index..."
+  python -m backend.index_kb
+else
+  echo "Vector store found at $CHROMA_DIR — skipping index build."
 fi
 
 # exec replaces this shell with uvicorn so signals (Ctrl+C) reach the server.

@@ -46,3 +46,29 @@ def stripe_is_configured() -> bool:
     """True only if a Stripe secret key is set. Routes use this to return a clear
     'Stripe not configured' message instead of a confusing crash when keys are absent."""
     return bool(STRIPE_SECRET_KEY)
+
+
+# --- RAG (Phase 3) ---------------------------------------------------------------
+# Folder holding the markdown knowledge base (return policy, shipping, FAQ...). These
+# are the documents RAG searches over.
+KNOWLEDGE_DIR = os.getenv("KNOWLEDGE_DIR", "backend/knowledge")
+
+# Folder where Chroma persists the vector store to disk (like support.db, but for
+# embeddings). Git-ignored and rebuildable from the markdown at any time.
+CHROMA_DIR = os.getenv("CHROMA_DIR", "./chroma_db")
+
+
+# --- AI chat (Phase 4) -----------------------------------------------------------
+# Groq serves open models (Llama) over an OpenAI-compatible API — free + fast, and it
+# supports tool calling, which the assistant needs. Key starts "gsk_".
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+
+# Which Groq model to chat with. llama-3.3-70b-versatile is a strong tool-calling model.
+# Overridable via env so you can swap models without touching code.
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+
+
+def groq_is_configured() -> bool:
+    """True only if a Groq key is set. The chat route uses this to return a clear
+    'AI not configured' message instead of crashing when the key is absent."""
+    return bool(GROQ_API_KEY)

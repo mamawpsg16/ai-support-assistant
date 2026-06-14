@@ -66,3 +66,4 @@ Stripe testing, etc.).
 
 > Heads-up: there is **no authentication yet** — every endpoint is open. Fine for local
 > dev; see `SECURITY.md` before deploying anywhere real.
+ 

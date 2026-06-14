@@ -25,10 +25,15 @@
     <main class="container py-4">
       <RouterView />
     </main>
+
+    <!-- Phase 4: AI chat. Outside <main> so it floats over every page. -->
+    <ChatWidget />
   </div>
 </template>
 
 <script setup>
+import ChatWidget from './components/ChatWidget.vue'
+
 // Nav links defined once as data, then rendered with v-for (DRY — no repeated markup).
 const links = [
   { to: '/', label: 'Store' },
