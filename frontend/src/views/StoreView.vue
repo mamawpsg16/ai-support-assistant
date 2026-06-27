@@ -1,91 +1,121 @@
 <!--
-  StoreView.vue — the storefront home: a grid of products with Buy buttons.
+  StoreView.vue — the storefront home, restyled to the design.
 
-  Buy flow (uses real backend endpoints):
-    1. Pick a customer (who's buying).
-    2. Click Buy on a product.
-    3. POST /orders/                      -> creates a pending order
-    4. POST /payments/checkout/{orderId}  -> returns a Stripe checkout_url
-    5. window.location = checkout_url     -> Stripe's hosted payment page
+  Flow (now a cart, not buy-one-at-a-time):
+    1. Click "Add to cart" on a product  -> useCart().add() + the cart sidebar opens
+    2. Adjust quantities in the sidebar
+    3. "Checkout with Stripe" (in CartSidebar) -> POST /payments/checkout-cart
+       -> redirect to Stripe's hosted page
 
-  After paying, Stripe redirects to /checkout/success and (with `stripe listen`
-  running) the webhook marks the order paid.
+  No customer picker here anymore: the cart checkout charges for the products directly
+  (the server looks up prices), so it doesn't need a customer chosen up front.
+
+  Category chips filter the grid client-side. Categories come from utils/catalog.js
+  (the backend product has no category column yet).
 -->
 <template>
-  <div>
-    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
-      <div>
-        <h2 class="mb-1">Store</h2>
-        <p class="text-muted mb-0">Pick a customer, then buy a product.</p>
-      </div>
-      <div style="min-width: 280px">
-        <Picker
-          v-model="customerId"
-          :options="customersReq.data.value || []"
-          :loading="customersReq.loading.value"
-          title="Buying as"
-          placeholder="Search a customer…"
-        />
-      </div>
+  <div class="store">
+    <!-- Category filter bar -->
+    <div class="cat-bar">
+      <button
+        v-for="cat in categories"
+        :key="cat"
+        class="chip"
+        :class="{ 'chip-active': cat === selectedCat }"
+        @click="selectedCat = cat"
+      >
+        {{ cat }}
+      </button>
     </div>
-
-    <div v-if="buyError" class="alert alert-danger">{{ buyError }}</div>
 
     <!-- loading / error / grid -->
-    <div v-if="productsReq.loading.value" class="text-center text-muted py-5">Loading products…</div>
-    <div v-else-if="productsReq.error.value" class="alert alert-danger">
-      {{ productsReq.error.value }}
-    </div>
-    <div v-else class="row g-3">
-      <div class="col-12 col-sm-6 col-lg-4" v-for="p in productsReq.data.value || []" :key="p.id">
-        <ProductCard :product="p" :disabled="buying" @buy="buy" />
-      </div>
+    <div v-if="productsReq.loading.value" class="state">Loading products…</div>
+    <div v-else-if="productsReq.error.value" class="state error">{{ productsReq.error.value }}</div>
+    <div v-else class="grid">
+      <ProductCard
+        v-for="p in visibleProducts"
+        :key="p.id"
+        :product="p"
+        @add="addToCart"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
-import { products as productsApi, customers as customersApi, orders, payments } from '../api'
+import { computed, onMounted, ref } from 'vue'
+import { products as productsApi } from '../api'
 import { useAsync } from '../composables/useAsync'
-import Picker from '../components/Picker.vue'
+import { useCart } from '../composables/useCart'
+import { categoryFor, CATEGORY_ORDER } from '../utils/catalog'
 import ProductCard from '../components/ProductCard.vue'
 
-// Who is buying — bound to the customer Picker.
-const customerId = ref(null)
-
-// Load products (grid) and customers (picker) via the composable.
 const productsReq = useAsync(() => productsApi.list())
-const customersReq = useAsync(() => customersApi.list())
-onMounted(() => {
-  productsReq.run()
-  customersReq.run()
+onMounted(() => productsReq.run())
+
+// Cart: adding a product opens the sidebar so the change is visible.
+const { add, openCart } = useCart()
+function addToCart(product) {
+  add(product)
+  openCart()
+}
+
+// Which category chip is selected ("All" shows everything).
+const selectedCat = ref('All')
+
+// Chips = "All" + only the categories that actually appear in the loaded products,
+// kept in the preferred display order.
+const categories = computed(() => {
+  const present = new Set((productsReq.data.value || []).map(categoryFor))
+  return ['All', ...CATEGORY_ORDER.filter((c) => present.has(c))]
 })
 
-// State while a Buy is in progress.
-const buying = ref(false)
-const buyError = ref('')
-
-async function buy(product) {
-  buyError.value = ''
-  if (!customerId.value) {
-    buyError.value = 'Pick a customer first.'
-    return
-  }
-  buying.value = true
-  try {
-    // create the order, then create its checkout session
-    const order = await orders.create({
-      customer_id: customerId.value,
-      product_id: product.id,
-      total: product.price,
-    })
-    const session = await payments.checkout(order.id)
-    // send the browser to Stripe's hosted checkout page
-    window.location.href = session.checkout_url
-  } catch (e) {
-    buyError.value = e?.response?.data?.detail || e.message || 'Checkout failed'
-    buying.value = false
-  }
-}
+const visibleProducts = computed(() => {
+  const all = productsReq.data.value || []
+  return selectedCat.value === 'All' ? all : all.filter((p) => categoryFor(p) === selectedCat.value)
+})
 </script>
+
+<style scoped>
+.store { animation: fadeIn 0.25s ease; }
+
+/* Category chips */
+.cat-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  padding: 0 2px;
+}
+.chip {
+  background: var(--surface);
+  color: #555;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.chip:hover { border-color: var(--orange); color: var(--orange); }
+.chip-active {
+  background: var(--orange);
+  color: #fff;
+  border-color: var(--orange);
+  font-weight: 600;
+  padding: 6px 16px;
+}
+.chip-active:hover { color: #fff; }
+
+/* Product grid — auto-fills as many ~160px columns as fit. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+}
+
+.state { padding: 48px 0; text-align: center; color: var(--muted); }
+.state.error { color: var(--danger); }
+</style>

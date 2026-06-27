@@ -1,19 +1,31 @@
 <!--
-  StatusBadge.vue — shows a coloured Bootstrap badge for a status string.
-  Reused anywhere a status appears (orders, subscriptions). The colour logic lives in
-  utils/format.js; this component just renders it.
+  StatusBadge.vue — a coloured status pill (themed to the design).
+  Colour + label come from utils/format.js so a status looks identical everywhere.
 
   Usage: <StatusBadge :status="order.status" />
 -->
 <template>
-  <span :class="statusBadgeClass(status)">{{ status }}</span>
+  <span class="status-pill" :style="{ background: s.bg, color: s.col }">{{ label }}</span>
 </template>
 
 <script setup>
-import { statusBadgeClass } from '../utils/format'
+import { computed } from 'vue'
+import { statusStyle, statusLabel } from '../utils/format'
 
-// defineProps declares the inputs a component accepts (like function arguments).
-defineProps({
+const props = defineProps({
   status: { type: String, required: true },
 })
+
+const s = computed(() => statusStyle(props.status))
+const label = computed(() => statusLabel(props.status))
 </script>
+
+<style scoped>
+.status-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+</style>

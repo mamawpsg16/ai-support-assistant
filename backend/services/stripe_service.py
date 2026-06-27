@@ -61,6 +61,40 @@ def create_checkout_session(order: Order):
     return session
 
 
+def create_cart_checkout_session(items: list[dict]):
+    """
+    Create ONE hosted Checkout Session for a whole cart (several products at once).
+
+    `items` is a list of {"name", "amount" (dollars), "quantity"} dicts that the route
+    builds AFTER looking each price up in our own DB — so the amount charged never comes
+    from the browser (a client could otherwise tamper with prices).
+
+    Unlike create_checkout_session() above, this does NOT create Order rows, so there's
+    no order_id metadata and the webhook leaves it alone. It's a straight "pay for these
+    line items" session. (Tracking cart purchases as Orders is a later step — see the
+    redesign plan.)
+    """
+    line_items = [
+        {
+            "price_data": {
+                "currency": "usd",
+                "product_data": {"name": it["name"]},
+                "unit_amount": dollars_to_cents(it["amount"]),  # cents!
+            },
+            "quantity": it["quantity"],
+        }
+        for it in items
+    ]
+
+    session = stripe.checkout.Session.create(
+        mode="payment",
+        line_items=line_items,
+        success_url=config.CHECKOUT_SUCCESS_URL,
+        cancel_url=config.CHECKOUT_CANCEL_URL,
+    )
+    return session
+
+
 def create_refund(payment_intent_id: str):
     """
     Refund a payment by its PaymentIntent id (the "pi_..." string saved on the order).

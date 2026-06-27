@@ -41,6 +41,8 @@ export const support = {
 // Stripe payments.
 export const payments = {
   checkout: (orderId) => http.post(`/payments/checkout/${orderId}`).then((r) => r.data),
+  // Cart checkout: send [{ product_id, quantity }]; get back { checkout_url } to redirect to.
+  checkoutCart: (items) => http.post('/payments/checkout-cart', { items }).then((r) => r.data),
   refund: (orderId) => http.post(`/payments/refund/${orderId}`).then((r) => r.data),
 }
 

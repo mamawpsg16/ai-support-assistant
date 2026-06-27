@@ -8,51 +8,51 @@
 <template>
   <div>
     <!-- Create / edit form (one form does both; form.id decides which) -->
-    <form class="row g-2 align-items-start mb-4" @submit.prevent="submit">
-      <div class="col-12 col-md-4">
+    <form class="mgr-form" @submit.prevent="submit">
+      <div class="ui-field">
         <input
           v-model="form.name"
-          class="form-control"
-          :class="{ 'is-invalid': v$.name.$error }"
+          class="ui-input"
+          :class="{ invalid: v$.name.$error }"
           placeholder="Name"
         />
-        <div class="invalid-feedback" v-if="v$.name.$error">{{ v$.name.$errors[0].$message }}</div>
+        <div class="ui-error" v-if="v$.name.$error">{{ v$.name.$errors[0].$message }}</div>
       </div>
-      <div class="col-12 col-md-4">
+      <div class="ui-field">
         <input
           v-model="form.email"
-          class="form-control"
-          :class="{ 'is-invalid': v$.email.$error }"
+          class="ui-input"
+          :class="{ invalid: v$.email.$error }"
           placeholder="Email"
         />
-        <div class="invalid-feedback" v-if="v$.email.$error">{{ v$.email.$errors[0].$message }}</div>
+        <div class="ui-error" v-if="v$.email.$error">{{ v$.email.$errors[0].$message }}</div>
       </div>
-      <div class="col-12 col-md-4 d-flex gap-2">
-        <button class="btn btn-primary" :disabled="saving">
+      <div class="mgr-actions">
+        <button class="ui-btn ui-btn-primary" :disabled="saving">
           {{ form.id ? 'Update' : 'Add' }} customer
         </button>
-        <button v-if="form.id" type="button" class="btn btn-outline-secondary" @click="resetForm">
+        <button v-if="form.id" type="button" class="ui-btn ui-btn-ghost" @click="resetForm">
           Cancel
         </button>
       </div>
     </form>
 
-    <div v-if="errorMsg" class="alert alert-danger">{{ errorMsg }}</div>
+    <div v-if="errorMsg" class="ui-alert">{{ errorMsg }}</div>
 
     <!-- List -->
-    <div v-if="loading" class="text-muted">Loading customers…</div>
-    <table v-else class="table align-middle">
+    <div v-if="loading" class="ui-state">Loading customers…</div>
+    <table v-else class="ui-table">
       <thead>
-        <tr><th>#</th><th>Name</th><th>Email</th><th class="text-end">Actions</th></tr>
+        <tr><th>#</th><th>Name</th><th>Email</th><th class="ui-right">Actions</th></tr>
       </thead>
       <tbody>
         <tr v-for="c in items || []" :key="c.id">
           <td>{{ c.id }}</td>
           <td>{{ c.name }}</td>
           <td>{{ c.email }}</td>
-          <td class="text-end">
-            <button class="btn btn-outline-primary btn-sm me-2" @click="edit(c)">Edit</button>
-            <button class="btn btn-outline-danger btn-sm" @click="onDelete(c)">Delete</button>
+          <td class="ui-right mgr-row-actions">
+            <button class="ui-btn ui-btn-ghost ui-btn-sm" @click="edit(c)">Edit</button>
+            <button class="ui-btn ui-btn-danger ui-btn-sm" @click="onDelete(c)">Delete</button>
           </td>
         </tr>
       </tbody>
@@ -121,3 +121,16 @@ async function onDelete(c) {
   }
 }
 </script>
+
+<style scoped>
+.mgr-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+.mgr-actions { display: flex; gap: 8px; }
+.mgr-row-actions { display: flex; gap: 8px; justify-content: flex-end; }
+@media (max-width: 640px) { .mgr-form { grid-template-columns: 1fr; } }
+</style>

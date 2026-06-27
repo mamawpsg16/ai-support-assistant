@@ -1,24 +1,25 @@
 <!--
-  ManageView.vue — admin page to manage customers and products.
-  Two Bootstrap tabs, each hosting a manager component. A simple `tab` ref decides
-  which one shows (no Bootstrap JS needed — Vue handles the toggle).
+  ManageView.vue — admin page to manage customers and products, restyled.
+
+  (The design's "Manage" is a mock account/profile screen. The real app's Manage is the
+  CRUD admin we already have, so we keep that and give it the design's look: a heading
+  plus themed tab pills switching between the two manager components.)
 -->
 <template>
-  <div>
-    <h2 class="mb-3">Manage</h2>
+  <div class="ui-view">
+    <div class="ui-head">
+      <h1 class="ui-h1">Manage</h1>
+      <p class="ui-sub">Customers &amp; products.</p>
+    </div>
 
-    <ul class="nav nav-tabs mb-4">
-      <li class="nav-item">
-        <button class="nav-link" :class="{ active: tab === 'customers' }" @click="tab = 'customers'">
-          Customers
-        </button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-link" :class="{ active: tab === 'products' }" @click="tab = 'products'">
-          Products
-        </button>
-      </li>
-    </ul>
+    <div class="tabs">
+      <button class="tab" :class="{ 'tab-active': tab === 'customers' }" @click="tab = 'customers'">
+        Customers
+      </button>
+      <button class="tab" :class="{ 'tab-active': tab === 'products' }" @click="tab = 'products'">
+        Products
+      </button>
+    </div>
 
     <CustomerManager v-if="tab === 'customers'" />
     <ProductManager v-else />
@@ -32,3 +33,20 @@ import ProductManager from '../components/ProductManager.vue'
 
 const tab = ref('customers')
 </script>
+
+<style scoped>
+.tabs { display: flex; gap: 2px; margin-bottom: 24px; }
+.tab {
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  padding: 7px 16px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.tab:hover { color: var(--ink); }
+.tab-active { background: var(--ink); color: #fff; font-weight: 600; }
+</style>

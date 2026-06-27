@@ -1,13 +1,19 @@
 <!--
-  SubscriptionsView.vue — pick a customer, see their subscription(s).
-  Uses: GET /support/customer/{id}/subscription  (returns a list).
-  Same pattern as OrdersView: Picker + useAsync + watch.
+  SubscriptionsView.vue — pick a customer, see their subscription(s), restyled.
+
+  Note: the Claude design's Subscriptions screen is a marketing PRICING TABLE (mock,
+  not wired to the backend). The real feature is "show this customer's subscriptions",
+  so we keep the real data and give it the design's card look (like we skipped the mock
+  checkout modal). Endpoint unchanged: GET /support/customer/{id}/subscription.
 -->
 <template>
-  <div>
-    <h2 class="mb-3">Subscriptions</h2>
+  <div class="ui-view">
+    <div class="ui-head">
+      <h1 class="ui-h1">Subscriptions</h1>
+      <p class="ui-sub">Active plans for the selected customer.</p>
+    </div>
 
-    <div class="mb-4" style="max-width: 360px">
+    <div class="picker-row">
       <Picker
         v-model="customerId"
         :options="customersReq.data.value || []"
@@ -17,27 +23,20 @@
       />
     </div>
 
-    <p v-if="!customerId" class="text-muted">Pick a customer to see their subscriptions.</p>
-
-    <div v-else-if="subsReq.loading.value" class="text-muted">Loading subscriptions…</div>
-    <div v-else-if="subsReq.error.value" class="alert alert-danger">{{ subsReq.error.value }}</div>
-    <div v-else-if="(subsReq.data.value || []).length === 0" class="text-muted">
+    <p v-if="!customerId" class="ui-state">Pick a customer to see their subscriptions.</p>
+    <div v-else-if="subsReq.loading.value" class="ui-state">Loading subscriptions…</div>
+    <div v-else-if="subsReq.error.value" class="ui-alert">{{ subsReq.error.value }}</div>
+    <p v-else-if="(subsReq.data.value || []).length === 0" class="ui-state">
       This customer has no subscriptions.
-    </div>
+    </p>
 
-    <div v-else class="row g-3">
-      <div class="col-12 col-md-6" v-for="s in subsReq.data.value" :key="s.id">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-              <h5 class="card-title mb-0">{{ s.plan_name }}</h5>
-              <StatusBadge :status="s.status" />
-            </div>
-            <p class="text-muted small mb-0 mt-2">
-              Subscription #{{ s.id }} · started {{ formatDate(s.created_at) }}
-            </p>
-          </div>
+    <div v-else class="sub-grid">
+      <div v-for="s in subsReq.data.value" :key="s.id" class="sub-card">
+        <div class="sub-top">
+          <span class="sub-name">{{ s.plan_name }}</span>
+          <StatusBadge :status="s.status" />
         </div>
+        <p class="sub-meta">Subscription #{{ s.id }} · started {{ formatDateShort(s.created_at) }}</p>
       </div>
     </div>
   </div>
@@ -47,7 +46,7 @@
 import { ref, watch } from 'vue'
 import { support, customers as customersApi } from '../api'
 import { useAsync } from '../composables/useAsync'
-import { formatDate } from '../utils/format'
+import { formatDateShort } from '../utils/format'
 import Picker from '../components/Picker.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 
@@ -61,3 +60,24 @@ watch(customerId, (id) => {
   if (id) subsReq.run(id)
 })
 </script>
+
+<style scoped>
+.picker-row { max-width: 360px; margin-bottom: 24px; }
+
+.sub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  max-width: 860px;
+}
+
+.sub-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px;
+}
+.sub-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.sub-name { font-family: var(--font-display); font-size: 22px; font-weight: 500; }
+.sub-meta { font-size: 13px; color: var(--muted); margin: 0; }
+</style>

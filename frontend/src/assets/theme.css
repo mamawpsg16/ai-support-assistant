@@ -1,0 +1,171 @@
+/*
+  theme.css — the GLOBAL look of the storefront (ported from the Claude design
+  "Storefront.dc.html"). This replaces Bootstrap's visual language with the design's
+  own palette, fonts and motion.
+
+  Why a plain .css file (not scoped to a component)?
+    Scoped <style> in a .vue file only styles THAT component. The things here are
+    app-wide: the page background, the two web-fonts, the form-field defaults, the
+    scrollbar, and the keyframe animations every panel reuses. So they live in one
+    global stylesheet that main.js imports once.
+
+  The colours are declared once as CSS custom properties (variables) under :root, so
+  every component can say `color: var(--ink)` instead of hard-coding #1A1A18 in 50
+  places. Change a brand colour here and it updates everywhere.
+*/
+
+:root {
+  /* Brand palette (the design's exact hex values) */
+  --cream:       #F4F3EF;  /* page background */
+  --ink:         #1A1A18;  /* primary text / dark buttons */
+  --sage:        #4A7A58;  /* primary green accent */
+  --sage-dark:   #3D6649;  /* green hover */
+  --sage-tint:   #EEF5F1;  /* green-tinted surface (badges, success) */
+  --orange:      #E8974A;  /* call-to-action / price */
+  --orange-dark: #D4833A;  /* orange hover */
+  --danger:      #C9695A;  /* destructive (delete account) */
+
+  /* Neutrals */
+  --surface:     #ffffff;  /* card background */
+  --surface-2:   #F7F7F5;  /* subtle inset background (inputs, list rows) */
+  --muted:       #7A7870;  /* secondary text */
+  --muted-2:     #B0AFA8;  /* tertiary text / placeholders */
+  --line:        rgba(0, 0, 0, 0.07); /* hairline borders */
+
+  /* Fonts */
+  --font-body:    'Inter Tight', system-ui, sans-serif; /* UI text */
+  --font-display: 'Fraunces', Georgia, serif;            /* headings */
+}
+
+/* Border-box everywhere = padding/borders don't blow out widths. */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+/* Form-field defaults that match the design (placeholders + focus ring). */
+input::placeholder { color: var(--muted-2); }
+input:focus { outline: none; border-color: rgba(74, 122, 88, 0.5) !important; }
+
+/* Thin, subtle scrollbars (WebKit/Chromium). */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 2px; }
+
+/*
+  Keyframes reused by panels and modals across the app. Defining them globally means
+  any component can `animation: slideUp .22s ...` without re-declaring them.
+*/
+@keyframes slideRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes fadeIn     { from { opacity: 0; }                 to { opacity: 1; } }
+@keyframes slideUp    { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes spin       { to { transform: rotate(360deg); } }
+@keyframes dot        { 0%, 80%, 100% { opacity: .3; transform: scale(.8); } 40% { opacity: 1; transform: scale(1); } }
+
+/*
+  --- Reusable UI primitives -------------------------------------------------------
+  Small global classes that replace the handful of Bootstrap classes we dropped
+  (inputs, buttons, tables, alerts, page headings). Defining them once here keeps the
+  rewritten views/managers DRY instead of repeating the same scoped CSS in each file.
+*/
+
+.ui-view { animation: fadeIn 0.25s ease; }
+
+/* Page heading block */
+.ui-head { margin-bottom: 28px; }
+.ui-h1 {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+  margin: 0 0 6px;
+}
+.ui-sub { font-size: 14px; color: var(--muted); margin: 0; }
+
+/* Card surface */
+.ui-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
+
+/* Form field + input */
+.ui-field { display: flex; flex-direction: column; gap: 5px; }
+.ui-label {
+  font-size: 11px;
+  color: var(--muted-2);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.ui-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 7px;
+  padding: 9px 11px;
+  font-size: 13px;
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+.ui-input.invalid { border-color: var(--danger) !important; }
+.ui-error { font-size: 12px; color: var(--danger); }
+
+/* Buttons */
+.ui-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.ui-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.ui-btn-sm { padding: 6px 12px; font-size: 12px; }
+.ui-btn-primary { background: var(--ink); color: #fff; }
+.ui-btn-primary:hover:not(:disabled) { opacity: 0.85; }
+.ui-btn-accent { background: var(--sage); color: #fff; }
+.ui-btn-accent:hover:not(:disabled) { background: var(--sage-dark); }
+.ui-btn-ghost { background: transparent; border: 1px solid rgba(0, 0, 0, 0.12); color: var(--muted); }
+.ui-btn-ghost:hover:not(:disabled) { background: var(--cream); color: var(--ink); }
+.ui-btn-danger { background: transparent; border: 1px solid rgba(201, 105, 90, 0.3); color: var(--danger); }
+.ui-btn-danger:hover:not(:disabled) { background: #fdf2f0; }
+
+/* Table */
+.ui-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ui-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted-2);
+  font-weight: 600;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.ui-table td { padding: 12px; border-bottom: 1px solid var(--line); }
+.ui-table tbody tr:hover td { background: var(--surface-2); }
+.ui-right { text-align: right; }
+
+/* Alert + empty/loading state */
+.ui-alert {
+  background: #fdf2f0;
+  border: 1px solid rgba(201, 105, 90, 0.3);
+  color: var(--danger);
+  border-radius: 9px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.ui-state { padding: 40px 0; color: var(--muted); text-align: center; }
+
+/*
+  vue-multiselect (the Picker dropdown) ships its own blue-accented CSS. A few small
+  overrides pull it into the design's palette (sage highlight, softer radius).
+*/
+.multiselect__tags { border-radius: 7px; border-color: rgba(0, 0, 0, 0.1); font-family: var(--font-body); }
+.multiselect__option--highlight { background: var(--sage); }
+.multiselect__option--highlight::after { background: var(--sage); }
+.multiselect__option--selected.multiselect__option--highlight { background: var(--danger); }
+.multiselect__option--selected.multiselect__option--highlight::after { background: var(--danger); }

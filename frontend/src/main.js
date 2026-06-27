@@ -5,9 +5,10 @@
 
 import { createApp } from 'vue'
 
-// Import Bootstrap's CSS once here so every component can use Bootstrap classes.
-// (We import it from the npm package we installed — no CDN link needed.)
-import 'bootstrap/dist/css/bootstrap.min.css'
+// Our design system: palette, fonts, global resets, animations, and the reusable UI
+// primitives (.ui-btn/.ui-input/.ui-table/…). This fully replaces Bootstrap, which was
+// removed once every view was re-skinned to the design.
+import './assets/theme.css'
 
 import App from './App.vue'
 import { router } from './router'

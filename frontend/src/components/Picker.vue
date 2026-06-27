@@ -22,7 +22,7 @@
   <div>
     <!-- Plain div (not <label>): vue-multiselect is a custom widget, not a native
          input, so its accessible name comes from :aria-label below instead. -->
-    <div class="form-label fw-semibold">{{ title }}</div>
+    <div class="picker-title">{{ title }}</div>
     <VueMultiselect
       :model-value="selected"
       :options="options"
@@ -85,3 +85,12 @@ function onChange(value) {
   }
 }
 </script>
+
+<style scoped>
+.picker-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+</style>

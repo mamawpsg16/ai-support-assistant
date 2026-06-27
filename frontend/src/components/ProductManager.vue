@@ -5,56 +5,56 @@
 -->
 <template>
   <div>
-    <form class="row g-2 align-items-start mb-4" @submit.prevent="submit">
-      <div class="col-12 col-md-3">
+    <form class="mgr-form" @submit.prevent="submit">
+      <div class="ui-field">
         <input
           v-model="form.name"
-          class="form-control"
-          :class="{ 'is-invalid': v$.name.$error }"
+          class="ui-input"
+          :class="{ invalid: v$.name.$error }"
           placeholder="Name"
         />
-        <div class="invalid-feedback" v-if="v$.name.$error">{{ v$.name.$errors[0].$message }}</div>
+        <div class="ui-error" v-if="v$.name.$error">{{ v$.name.$errors[0].$message }}</div>
       </div>
-      <div class="col-12 col-md-4">
-        <input v-model="form.description" class="form-control" placeholder="Description (optional)" />
+      <div class="ui-field">
+        <input v-model="form.description" class="ui-input" placeholder="Description (optional)" />
       </div>
-      <div class="col-6 col-md-2">
+      <div class="ui-field">
         <input
           v-model.number="form.price"
           type="number"
           step="0.01"
-          class="form-control"
-          :class="{ 'is-invalid': v$.price.$error }"
+          class="ui-input"
+          :class="{ invalid: v$.price.$error }"
           placeholder="Price"
         />
-        <div class="invalid-feedback" v-if="v$.price.$error">{{ v$.price.$errors[0].$message }}</div>
+        <div class="ui-error" v-if="v$.price.$error">{{ v$.price.$errors[0].$message }}</div>
       </div>
-      <div class="col-6 col-md-3 d-flex gap-2">
-        <button class="btn btn-primary" :disabled="saving">
+      <div class="mgr-actions">
+        <button class="ui-btn ui-btn-primary" :disabled="saving">
           {{ form.id ? 'Update' : 'Add' }}
         </button>
-        <button v-if="form.id" type="button" class="btn btn-outline-secondary" @click="resetForm">
+        <button v-if="form.id" type="button" class="ui-btn ui-btn-ghost" @click="resetForm">
           Cancel
         </button>
       </div>
     </form>
 
-    <div v-if="errorMsg" class="alert alert-danger">{{ errorMsg }}</div>
+    <div v-if="errorMsg" class="ui-alert">{{ errorMsg }}</div>
 
-    <div v-if="loading" class="text-muted">Loading products…</div>
-    <table v-else class="table align-middle">
+    <div v-if="loading" class="ui-state">Loading products…</div>
+    <table v-else class="ui-table">
       <thead>
-        <tr><th>#</th><th>Name</th><th>Description</th><th>Price</th><th class="text-end">Actions</th></tr>
+        <tr><th>#</th><th>Name</th><th>Description</th><th>Price</th><th class="ui-right">Actions</th></tr>
       </thead>
       <tbody>
         <tr v-for="p in items || []" :key="p.id">
           <td>{{ p.id }}</td>
           <td>{{ p.name }}</td>
-          <td class="text-muted small">{{ p.description }}</td>
+          <td class="mgr-desc">{{ p.description }}</td>
           <td>{{ formatMoney(p.price) }}</td>
-          <td class="text-end">
-            <button class="btn btn-outline-primary btn-sm me-2" @click="edit(p)">Edit</button>
-            <button class="btn btn-outline-danger btn-sm" @click="onDelete(p)">Delete</button>
+          <td class="ui-right mgr-row-actions">
+            <button class="ui-btn ui-btn-ghost ui-btn-sm" @click="edit(p)">Edit</button>
+            <button class="ui-btn ui-btn-danger ui-btn-sm" @click="onDelete(p)">Delete</button>
           </td>
         </tr>
       </tbody>
@@ -125,3 +125,17 @@ async function onDelete(p) {
   }
 }
 </script>
+
+<style scoped>
+.mgr-form {
+  display: grid;
+  grid-template-columns: 1.2fr 1.6fr 0.8fr auto;
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+.mgr-actions { display: flex; gap: 8px; }
+.mgr-row-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.mgr-desc { color: var(--muted); }
+@media (max-width: 720px) { .mgr-form { grid-template-columns: 1fr; } }
+</style>

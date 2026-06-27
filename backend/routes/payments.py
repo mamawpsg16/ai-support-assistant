@@ -6,20 +6,34 @@ order, ask the service to do the Stripe work, return the result.
 
 Endpoints:
   POST /payments/checkout/{order_id} -> create a Stripe Checkout Session, return its URL
+  POST /payments/checkout-cart       -> one session for a whole cart of products
   POST /payments/refund/{order_id}   -> refund that order's payment
   GET  /payments/success | /cancel   -> simple landing pages Stripe redirects back to
 """
 
 import stripe
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from backend import config
 from backend.database import get_db
-from backend.models import Order, OrderStatus
+from backend.models import Order, OrderStatus, Product
 from backend.services import crud, stripe_service
 
 router = APIRouter(prefix="/payments", tags=["payments"])
+
+
+# Request shape for the cart checkout. The browser sends only product_id + quantity;
+# the server looks the PRICE up itself (below), so a tampered-with price can't get
+# through. Pydantic validates the JSON body into these typed objects.
+class CartLine(BaseModel):
+    product_id: int
+    quantity: int
+
+
+class CartCheckout(BaseModel):
+    items: list[CartLine]
 
 
 @router.post("/checkout/{order_id}")
@@ -39,6 +53,33 @@ def create_checkout(order_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=502, detail=f"Stripe error: {e.user_message or str(e)}")
 
     # Return the hosted payment page URL. The frontend (Phase 5) sends the user there.
+    return {"checkout_url": session.url, "session_id": session.id}
+
+
+@router.post("/checkout-cart")
+def create_cart_checkout(payload: CartCheckout, db: Session = Depends(get_db)):
+    """Turn a cart (list of product_id + quantity) into ONE Stripe Checkout Session."""
+    if not config.stripe_is_configured():
+        raise HTTPException(status_code=503, detail="Stripe is not configured (set STRIPE_SECRET_KEY in .env)")
+
+    if not payload.items:
+        raise HTTPException(status_code=400, detail="Cart is empty")
+
+    # Build the line items from OUR database, not the browser's numbers.
+    line_data = []
+    for line in payload.items:
+        if line.quantity < 1:
+            raise HTTPException(status_code=400, detail="Quantity must be at least 1")
+        product = crud.get(db, Product, line.product_id)
+        if product is None:
+            raise HTTPException(status_code=404, detail=f"Product {line.product_id} not found")
+        line_data.append({"name": product.name, "amount": product.price, "quantity": line.quantity})
+
+    try:
+        session = stripe_service.create_cart_checkout_session(line_data)
+    except stripe.StripeError as e:
+        raise HTTPException(status_code=502, detail=f"Stripe error: {e.user_message or str(e)}")
+
     return {"checkout_url": session.url, "session_id": session.id}
 
 
